@@ -2,7 +2,7 @@ name: Update arXiv Preprints
 
 permissions:
   contents: write
-  
+
 on:
   schedule:
     - cron: "0 9 * * *"   # runs every day at 09:00 UTC
@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
