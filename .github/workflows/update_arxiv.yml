@@ -32,9 +32,9 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           
-          git pull
           git add arxiv_preprints.html
           
           git diff --quiet && git diff --staged --quiet || git commit -m "Update arXiv preprints"
           
+          git pull --rebase origin main
           git push
