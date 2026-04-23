@@ -2,6 +2,7 @@ import requests
 import feedparser
 from datetime import datetime
 from collections import defaultdict
+import pandas as pd
 
 # =========================
 # CONFIGURATION
@@ -81,7 +82,7 @@ def collect_papers():
                     "published": entry.published
                 }
     
-    return list(papers.values())
+    return papers
 
 
 def format_date(date_str):
@@ -148,9 +149,21 @@ h1 {
     <div class="date">
         {format_date(p['published'])}
     </div>
+"""
+        
+        #if summary is not nan, we add it to the html, otherwise we skip it
+        if p['summary'] and pd.notna(p['summary']):
+            html += f"""
     <div class="summary">
         {p['summary'][:300]}...
     </div>
+    """
+        else:
+            html += f"""    <div class="summary">
+    </div>
+    """
+            
+        html += """
 </div>
 """
     
@@ -162,6 +175,28 @@ h1 {
     return html
 
 
+def add_papers_from_database(file_path, papers):
+    """Add papers from an existing database (e.g. Excel file from IRIS) with keys: Autori, Titolo, DOI, Data pubblicazione, Abstract"""
+    print("Adding papers from database:", file_path)
+    df = pd.read_excel(file_path)
+    for _, row in df.iterrows():
+        title = row["Titolo"]
+        title_key = normalize_title(title)
+        print("Processing paper from database:", title)
+        
+        if title_key not in papers:
+            papers[title_key] = {
+                "title": title,
+                # Autori are in the format "Surname, Name; Surname, Name; ..." so we split by ";" and invert surname and name to have "Name Surname" for each author in a list
+                "authors": [a.strip().split(", ")[1] + " " + a.strip().split(", ")[0] for a in row["Autori"].split(";") if ", " in a],
+                # Abstract might be nan, in that case we set it to an empty string
+                "summary": row["Abstract"],
+                "link": f"https://doi.org/{row['DOI']}" if pd.notna(row.get("DOI")) else "#",
+                # Data pubblicazione is just the year, so we set it to January 1st of that year for sorting purposes
+                "published": f"{int(row['Data pubblicazione'])}-01-01T00:00:00Z" if pd.notna(row.get("Data pubblicazione")) else "1900-01-01T00:00:00Z"
+
+            }
+
 # =========================
 # MAIN
 # =========================
@@ -169,6 +204,10 @@ h1 {
 if __name__ == "__main__":
     print("Fetching papers from arXiv...")
     papers = collect_papers()
+
+    add_papers_from_database("database/noschese.xlsx", papers)
+
+    papers = list(papers.values())  # Convert dict to list for HTML generation
     
     print(f"Found {len(papers)} unique papers.")
     
