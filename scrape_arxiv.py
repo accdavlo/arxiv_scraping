@@ -130,7 +130,6 @@ h1 {
 </head>
 <body>
 
-<h1>Works of the Numerical Analysis Group (arXiv)</h1>
 <p>Last automatic update from arXiv:"""
     html+= f""" {datetime.now().strftime("%Y-%m-%d")}"""
     html+="""</p>
