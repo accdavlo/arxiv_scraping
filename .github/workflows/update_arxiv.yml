@@ -1,0 +1,36 @@
+name: Update arXiv Preprints
+
+on:
+  schedule:
+    - cron: "0 9 * * *"   # runs every day at 09:00 UTC
+  workflow_dispatch:      # allows manual run
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run script
+        run: python scrape_arxiv.py
+
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          
+          git add arxiv_preprints.html
+          
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update arXiv preprints"
+          
+          git push
